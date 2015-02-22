@@ -35,6 +35,8 @@ public class HandTrackingActivity extends Activity implements OnTouchListener, C
 	private static final String TAG = "OCVSample::Activity";
     private final double alpha = 2.0;
     private final double beta = 0.0;
+    
+    private final int KERNEL_SIZE = 5;
 	Mat kernel;
 	private Scalar CONTOUR_COLOR;
 	
@@ -71,7 +73,7 @@ public class HandTrackingActivity extends Activity implements OnTouchListener, C
     	mRgba = new Mat(height, width, CvType.CV_8UC3);
     	mHsv = new Mat(); //(height, width, CvType.CV_8UC3);
     	threshold = new Mat(); //(height, width, CvType.CV_8UC3);
-    	kernel = Mat.zeros(5, 5, CvType.CV_8UC1);
+    	kernel = Mat.zeros(KERNEL_SIZE, KERNEL_SIZE, CvType.CV_8UC1);
     	CONTOUR_COLOR = new Scalar(255,0,0);
     	mHierarchy = new Mat();
     	squares = getSquares(new Point(mRgba.width()/2,  mRgba.height()/2), 20);
@@ -93,22 +95,24 @@ public class HandTrackingActivity extends Activity implements OnTouchListener, C
     		for(int i=0; i < squares.length; i+=2) {
     			Core.rectangle(mRgba, squares[i], squares[i+1], new Scalar(255, 0, 0), 5);
     		}
+    		Core.putText(mRgba, "Position your hand on the squares and tap", new Point(mRgba.cols()*0.25, mRgba.rows()*0.9), 
+    							Core.FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 0, 0), 5);
     		mOutput = mRgba;
     	} else {
-    		Imgproc.resize(mRgba, mRgba, new Size(640, 360));
+    		Imgproc.resize(mRgba, mRgba, new Size(1280/3, 720/3));
     		//mRgba.convertTo(mRgba, -1, alpha, beta);
     		Imgproc.cvtColor(mRgba, mHsv, Imgproc.COLOR_RGB2HSV);
     		mOutput = null;
     		for(int i=0; i<squares.length;i++) {
     			Core.inRange(mHsv, new Scalar(min_range[i][0], min_range[i][1], min_range[i][2]), 
     							   new Scalar(max_range[i][0], max_range[i][1], max_range[i][2]), threshold);
-    			Imgproc.GaussianBlur(threshold, threshold, new Size(15,15), 0, 0);
+    			Imgproc.GaussianBlur(threshold, threshold, new Size(11,11), 0, 0);
     			if(i==0)
     				mOutput=threshold.clone();
     			else
     				Core.add(mOutput, threshold, mOutput);
     		}
-    		Imgproc.medianBlur(mOutput, mOutput, 15);
+    		Imgproc.medianBlur(mOutput, mOutput, 11);
     		Imgproc.dilate(mOutput, mOutput, kernel);
     		Imgproc.erode(mOutput, mOutput, kernel);
     		
