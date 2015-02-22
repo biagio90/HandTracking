@@ -33,6 +33,9 @@ import android.view.View.OnTouchListener;
 
 public class HandTrackingActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
 	private static final String TAG = "OCVSample::Activity";
+	private int Height = 720;
+	private int Width  = 1280;
+	
     private final double alpha = 2.0;
     private final double beta = 0.0;
     
@@ -70,13 +73,15 @@ public class HandTrackingActivity extends Activity implements OnTouchListener, C
 
     public void onCameraViewStarted(int width, int height) {
     	Log.i(TAG, "-----------Widht: " +width+" Height: "+height);
+    	Height = height;
+    	Width = width;
     	mRgba = new Mat(height, width, CvType.CV_8UC3);
     	mHsv = new Mat(); //(height, width, CvType.CV_8UC3);
     	threshold = new Mat(); //(height, width, CvType.CV_8UC3);
     	kernel = Mat.zeros(KERNEL_SIZE, KERNEL_SIZE, CvType.CV_8UC1);
     	CONTOUR_COLOR = new Scalar(255,0,0);
     	mHierarchy = new Mat();
-    	squares = getSquares(new Point(mRgba.width()/2,  mRgba.height()/2), 20);
+    	squares = getSquares(new Point(mRgba.width()/2,  mRgba.height()/2), (int)(Width*20)/1280);
     	max_range = new int[squares.length][3];
     	min_range = new int[squares.length][3];
     	for(int i=0; i<squares.length; i++) {
@@ -96,10 +101,10 @@ public class HandTrackingActivity extends Activity implements OnTouchListener, C
     			Core.rectangle(mRgba, squares[i], squares[i+1], new Scalar(255, 0, 0), 5);
     		}
     		Core.putText(mRgba, "Position your hand on the squares and tap", new Point(mRgba.cols()*0.25, mRgba.rows()*0.9), 
-    							Core.FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 0, 0), 5);
+    							Core.FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 0, 0), 2);
     		mOutput = mRgba;
     	} else {
-    		Imgproc.resize(mRgba, mRgba, new Size(1280/3, 720/3));
+    		if(Width/3 > 320)	Imgproc.resize(mRgba, mRgba, new Size(Width/3, Height/3));
     		//mRgba.convertTo(mRgba, -1, alpha, beta);
     		Imgproc.cvtColor(mRgba, mHsv, Imgproc.COLOR_RGB2HSV);
     		mOutput = null;
@@ -134,7 +139,7 @@ public class HandTrackingActivity extends Activity implements OnTouchListener, C
             }
             Imgproc.drawContours(mRgba, contours, i_max, CONTOUR_COLOR);
             
-            Imgproc.resize(mRgba, mRgba, new Size(1280, 720));
+            if(Width/3 > 320)	Imgproc.resize(mRgba, mRgba, new Size(Width, Height));
     	}
     	return mRgba;
     }
@@ -166,7 +171,8 @@ public class HandTrackingActivity extends Activity implements OnTouchListener, C
 	
     Point[] getSquares(Point center, int side){
     	Point[] squares = new Point[10*2];
-    	int left = -100, right = 100, up = -100, down = 100;
+    	int step = (Width*100)/1280;
+    	int left = -step, right = step, up = -step, down = step;
     	
     	squares[0]  = new Point(center.x - side, center.y-side);
     	squares[1]  = new Point(center.x + side, center.y+side);
